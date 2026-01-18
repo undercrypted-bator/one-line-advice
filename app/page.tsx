@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const initialAdvice = [
   "Start before you feel ready.",
@@ -8,13 +8,31 @@ const initialAdvice = [
   "Don’t compare your journey to others.",
   "Rest is productive.",
   "Do one thing well today.",
+  "Action cures overthinking.",
+  "Progress > perfection.",
+  "You are allowed to go slow.",
 ];
+
+function getAdviceOfTheDay(list: string[]) {
+  const today = new Date();
+  const seed =
+    today.getFullYear() * 10000 +
+    (today.getMonth() + 1) * 100 +
+    today.getDate();
+
+  return list[seed % list.length];
+}
 
 export default function Home() {
   const [adviceList, setAdviceList] = useState(initialAdvice);
-  const [currentAdvice, setCurrentAdvice] = useState(adviceList[0]);
+  const [currentAdvice, setCurrentAdvice] = useState("");
   const [input, setInput] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Set advice of the day on load
+  useEffect(() => {
+    setCurrentAdvice(getAdviceOfTheDay(adviceList));
+  }, [adviceList]);
 
   function getRandomAdvice() {
     const random =
@@ -34,10 +52,7 @@ export default function Home() {
   function copyAdvice() {
     navigator.clipboard.writeText(currentAdvice);
     setCopied(true);
-
-    setTimeout(() => {
-      setCopied(false);
-    }, 1500);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   return (
@@ -58,8 +73,8 @@ export default function Home() {
           One-Line Advice
         </h1>
 
-        <p style={{ opacity: 0.7, marginBottom: "2.5rem" }}>
-          Short wisdom from strangers on the internet.
+        <p style={{ opacity: 0.7, marginBottom: "1.5rem" }}>
+          Advice of the day
         </p>
 
         <div
@@ -107,7 +122,7 @@ export default function Home() {
             color: "#000",
           }}
         >
-          Give me another
+          Show random advice
         </button>
 
         <div>
