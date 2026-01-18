@@ -1,22 +1,6 @@
 import { NextResponse } from "next/server";
 
-async function fromAdviceSlip() {
-  const res = await fetch("https://api.adviceslip.com/advice", {
-    cache: "no-store",
-  });
-  const data = await res.json();
-  return data.slip.advice;
-}
-
-async function fromZenQuotes() {
-  const res = await fetch("https://zenquotes.io/api/random", {
-    cache: "no-store",
-  });
-  const data = await res.json();
-  return data[0].q;
-}
-
-async function fromAffirmations() {
+async function calmAdvice() {
   const res = await fetch("https://www.affirmations.dev", {
     cache: "no-store",
   });
@@ -24,24 +8,41 @@ async function fromAffirmations() {
   return data.affirmation;
 }
 
-export async function GET() {
-  const sources = [
-    fromAdviceSlip,
-    fromZenQuotes,
-    fromAffirmations,
-  ];
+async function harshAdvice() {
+  const res = await fetch("https://api.adviceslip.com/advice", {
+    cache: "no-store",
+  });
+  const data = await res.json();
+  return data.slip.advice;
+}
+
+async function philosophicalAdvice() {
+  const res = await fetch("https://zenquotes.io/api/random", {
+    cache: "no-store",
+  });
+  const data = await res.json();
+  return data[0].q;
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const tone = searchParams.get("tone") || "calm";
 
   try {
-    // 🎲 Pick a random source
-    const randomSource =
-      sources[Math.floor(Math.random() * sources.length)];
+    let advice = "";
 
-    const advice = await randomSource();
+    if (tone === "harsh") {
+      advice = await harshAdvice();
+    } else if (tone === "philosophical") {
+      advice = await philosophicalAdvice();
+    } else {
+      advice = await calmAdvice();
+    }
 
     return NextResponse.json({ advice });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { advice: "Pause. Breathe. Begin again." },
+      { advice: "Sit with the silence for a moment." },
       { status: 500 }
     );
   }

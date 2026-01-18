@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from "react";
 
+type Tone = "calm" | "harsh" | "philosophical";
+
 export default function Home() {
   const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [tone, setTone] = useState<Tone>("calm");
 
-  async function fetchAdvice() {
+  async function fetchAdvice(selectedTone = tone) {
     setLoading(true);
     setVisible(false);
 
     try {
-      const res = await fetch("/api/advice", { cache: "no-store" });
+      const res = await fetch(`/api/advice?tone=${selectedTone}`, {
+        cache: "no-store",
+      });
       const data = await res.json();
 
       setTimeout(() => {
@@ -20,7 +25,7 @@ export default function Home() {
         setVisible(true);
       }, 300);
     } catch {
-      setAdvice("Sit with the silence for a moment.");
+      setAdvice("Pause. Breathe. Begin again.");
       setVisible(true);
     } finally {
       setLoading(false);
@@ -29,7 +34,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchAdvice();
-  }, []);
+  }, [tone]);
 
   return (
     <main
@@ -47,32 +52,39 @@ export default function Home() {
         fontFamily: "Georgia, serif",
       }}
     >
-      <div
-        style={{
-          maxWidth: "720px",
-          textAlign: "center",
-        }}
-      >
+      <div style={{ maxWidth: "720px", textAlign: "center" }}>
         <h1
           style={{
             fontSize: "3.2rem",
             fontWeight: 500,
             marginBottom: "0.6rem",
-            letterSpacing: "-0.03em",
           }}
         >
           One-Line Advice
         </h1>
 
-        <p
+        <p style={{ opacity: 0.5, marginBottom: "2rem" }}>
+          Choose how you want to be told.
+        </p>
+
+        {/* Tone Selector */}
+        <select
+          value={tone}
+          onChange={(e) => setTone(e.target.value as Tone)}
           style={{
-            opacity: 0.5,
-            marginBottom: "4rem",
-            fontSize: "0.95rem",
+            marginBottom: "3rem",
+            padding: "0.4rem 0.8rem",
+            borderRadius: "999px",
+            background: "rgba(255,255,255,0.08)",
+            color: "#fff",
+            border: "1px solid rgba(255,255,255,0.3)",
+            cursor: "pointer",
           }}
         >
-          Something different. Every time.
-        </p>
+          <option value="calm">Calm</option>
+          <option value="harsh">Harsh</option>
+          <option value="philosophical">Philosophical</option>
+        </select>
 
         <div
           style={{
@@ -92,7 +104,7 @@ export default function Home() {
         </div>
 
         <button
-          onClick={fetchAdvice}
+          onClick={() => fetchAdvice()}
           disabled={loading}
           style={{
             padding: "0.9rem 2.2rem",
@@ -103,37 +115,19 @@ export default function Home() {
             color: "#f9fafb",
             cursor: "pointer",
             opacity: loading ? 0.5 : 0.85,
-            transition: "all 0.3s ease",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.opacity = "1")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.opacity = "0.85")
-          }
         >
           {loading ? "Thinking…" : "Give me something new"}
         </button>
 
-        <p
-          style={{
-            marginTop: "3rem",
-            fontSize: "0.7rem",
-            opacity: 0.35,
-          }}
-        >
-          Refreshing too fast ruins it.
-        </p>
+        <style>{`
+          @keyframes bgMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}</style>
       </div>
-
-      {/* CSS animations */}
-      <style>{`
-        @keyframes bgMove {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
     </main>
   );
 }
