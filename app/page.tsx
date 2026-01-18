@@ -29,7 +29,6 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Set advice of the day on load
   useEffect(() => {
     setCurrentAdvice(getAdviceOfTheDay(adviceList));
   }, [adviceList]);
@@ -53,6 +52,20 @@ export default function Home() {
     navigator.clipboard.writeText(currentAdvice);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  function shareWhatsApp() {
+    const text = `"${currentAdvice}"\n\nvia One-Line Advice`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  }
+
+  function shareX() {
+    const text = `"${currentAdvice}"\n\n— One-Line Advice`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      text
+    )}`;
+    window.open(url, "_blank");
   }
 
   return (
@@ -90,22 +103,56 @@ export default function Home() {
           “{currentAdvice}”
         </div>
 
-        <button
-          onClick={copyAdvice}
-          style={{
-            marginBottom: "2rem",
-            background: "transparent",
-            border: "1px solid #444",
-            color: "#fff",
-            padding: "0.4rem 0.9rem",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "0.85rem",
-            opacity: 0.85,
-          }}
-        >
-          {copied ? "Copied!" : "Copy advice"}
-        </button>
+        <div style={{ marginBottom: "2rem" }}>
+          <button
+            onClick={copyAdvice}
+            style={{
+              marginRight: "0.5rem",
+              background: "transparent",
+              border: "1px solid #444",
+              color: "#fff",
+              padding: "0.4rem 0.9rem",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+            }}
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+
+          <button
+            onClick={shareWhatsApp}
+            style={{
+              marginRight: "0.5rem",
+              background: "#25D366",
+              border: "none",
+              color: "#000",
+              padding: "0.4rem 0.9rem",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: "bold",
+            }}
+          >
+            WhatsApp
+          </button>
+
+          <button
+            onClick={shareX}
+            style={{
+              background: "#ffffff",
+              border: "none",
+              color: "#000",
+              padding: "0.4rem 0.9rem",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: "bold",
+            }}
+          >
+            X
+          </button>
+        </div>
 
         <button
           onClick={getRandomAdvice}
