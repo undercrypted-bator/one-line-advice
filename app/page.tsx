@@ -14,6 +14,7 @@ export default function Home() {
   const [adviceList, setAdviceList] = useState(initialAdvice);
   const [currentAdvice, setCurrentAdvice] = useState(adviceList[0]);
   const [input, setInput] = useState("");
+  const [copied, setCopied] = useState(false);
 
   function getRandomAdvice() {
     const random =
@@ -28,6 +29,15 @@ export default function Home() {
     setAdviceList([text, ...adviceList]);
     setCurrentAdvice(text);
     setInput("");
+  }
+
+  function copyAdvice() {
+    navigator.clipboard.writeText(currentAdvice);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 1500);
   }
 
   return (
@@ -56,7 +66,7 @@ export default function Home() {
           style={{
             fontSize: "1.8rem",
             lineHeight: "1.4",
-            marginBottom: "2rem",
+            marginBottom: "1rem",
             padding: "1.5rem",
             background: "#181818",
             borderRadius: "10px",
@@ -66,8 +76,27 @@ export default function Home() {
         </div>
 
         <button
+          onClick={copyAdvice}
+          style={{
+            marginBottom: "2rem",
+            background: "transparent",
+            border: "1px solid #444",
+            color: "#fff",
+            padding: "0.4rem 0.9rem",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "0.85rem",
+            opacity: 0.85,
+          }}
+        >
+          {copied ? "Copied!" : "Copy advice"}
+        </button>
+
+        <button
           onClick={getRandomAdvice}
           style={{
+            display: "block",
+            margin: "0 auto 2.5rem",
             padding: "0.8rem 1.6rem",
             fontSize: "1rem",
             fontWeight: "bold",
@@ -76,13 +105,12 @@ export default function Home() {
             cursor: "pointer",
             background: "#ffffff",
             color: "#000",
-            marginBottom: "2.5rem",
           }}
         >
           Give me another
         </button>
 
-        <div style={{ marginTop: "1rem" }}>
+        <div>
           <textarea
             placeholder="Write your one-line advice (max 80 characters)"
             value={input}
