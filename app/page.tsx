@@ -3,12 +3,26 @@
 import { useEffect, useState } from "react";
 
 type Tone = "calm" | "harsh" | "philosophical";
+type Ritual = "morning" | "night";
+
+function getDefaultRitual(): Ritual {
+  const hour = new Date().getHours();
+  return hour >= 5 && hour < 17 ? "morning" : "night";
+}
 
 export default function Home() {
   const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
+
+  const [ritual, setRitual] = useState<Ritual>("morning");
   const [tone, setTone] = useState<Tone>("calm");
+
+  useEffect(() => {
+    const detectedRitual = getDefaultRitual();
+    setRitual(detectedRitual);
+    setTone(detectedRitual === "morning" ? "calm" : "philosophical");
+  }, []);
 
   async function fetchAdvice(selectedTone = tone) {
     setLoading(true);
@@ -25,7 +39,7 @@ export default function Home() {
         setVisible(true);
       }, 300);
     } catch {
-      setAdvice("Pause. Breathe. Begin again.");
+      setAdvice("Sit with the moment.");
       setVisible(true);
     } finally {
       setLoading(false);
@@ -36,12 +50,15 @@ export default function Home() {
     fetchAdvice();
   }, [tone]);
 
+  const isNight = ritual === "night";
+
   return (
     <main
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(120deg, #0f0f0f, #111827, #020617)",
+        background: isNight
+          ? "linear-gradient(120deg, #020617, #020617, #000)"
+          : "linear-gradient(120deg, #0f172a, #020617)",
         backgroundSize: "400% 400%",
         animation: "bgMove 20s ease infinite",
         display: "flex",
@@ -63,9 +80,57 @@ export default function Home() {
           One-Line Advice
         </h1>
 
-        <p style={{ opacity: 0.5, marginBottom: "2rem" }}>
-          Choose how you want to be told.
+        <p style={{ opacity: 0.55, marginBottom: "1.2rem" }}>
+          {ritual === "morning"
+            ? "A quiet thought to begin your day."
+            : "Something to sit with before you rest."}
         </p>
+
+        {/* Ritual Selector */}
+        <div style={{ marginBottom: "2rem" }}>
+          <button
+            onClick={() => {
+              setRitual("morning");
+              setTone("calm");
+            }}
+            style={{
+              marginRight: "0.5rem",
+              padding: "0.3rem 0.9rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background:
+                ritual === "morning"
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: "0.75rem",
+            }}
+          >
+            Morning
+          </button>
+
+          <button
+            onClick={() => {
+              setRitual("night");
+              setTone("philosophical");
+            }}
+            style={{
+              padding: "0.3rem 0.9rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background:
+                ritual === "night"
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: "0.75rem",
+            }}
+          >
+            Night
+          </button>
+        </div>
 
         {/* Tone Selector */}
         <select
