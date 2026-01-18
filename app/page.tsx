@@ -1,219 +1,139 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-const initialAdvice = [
-  "Start before you feel ready.",
-  "Consistency beats motivation.",
-  "Don’t compare your journey to others.",
-  "Rest is productive.",
-  "Do one thing well today.",
-  "Action cures overthinking.",
-  "Progress > perfection.",
-  "You are allowed to go slow.",
-];
-
-function getAdviceOfTheDay(list: string[]) {
-  const today = new Date();
-  const seed =
-    today.getFullYear() * 10000 +
-    (today.getMonth() + 1) * 100 +
-    today.getDate();
-
-  return list[seed % list.length];
-}
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [adviceList, setAdviceList] = useState(initialAdvice);
-  const [currentAdvice, setCurrentAdvice] = useState("");
-  const [input, setInput] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [advice, setAdvice] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  async function fetchAdvice() {
+    setLoading(true);
+    setVisible(false);
+
+    try {
+      const res = await fetch("/api/advice", { cache: "no-store" });
+      const data = await res.json();
+
+      setTimeout(() => {
+        setAdvice(data.advice);
+        setVisible(true);
+      }, 300);
+    } catch {
+      setAdvice("Sit with the silence for a moment.");
+      setVisible(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    setCurrentAdvice(getAdviceOfTheDay(adviceList));
-  }, [adviceList]);
-
-  function getRandomAdvice() {
-    const random =
-      adviceList[Math.floor(Math.random() * adviceList.length)];
-    setCurrentAdvice(random);
-  }
-
-  function submitAdvice() {
-    const text = input.trim();
-    if (text.length === 0 || text.length > 80) return;
-
-    setAdviceList([text, ...adviceList]);
-    setCurrentAdvice(text);
-    setInput("");
-  }
-
-  function copyAdvice() {
-    navigator.clipboard.writeText(currentAdvice);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
-  function shareWhatsApp() {
-    const text = `"${currentAdvice}"\n\nvia One-Line Advice`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank");
-  }
-
-  function shareX() {
-    const text = `"${currentAdvice}"\n\n— One-Line Advice`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-      text
-    )}`;
-    window.open(url, "_blank");
-  }
+    fetchAdvice();
+  }, []);
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        background: "#0f0f0f",
-        color: "#ffffff",
+        background:
+          "linear-gradient(120deg, #0f0f0f, #111827, #020617)",
+        backgroundSize: "400% 400%",
+        animation: "bgMove 20s ease infinite",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "2rem",
-        fontFamily: "Inter, Arial, sans-serif",
+        color: "#f9fafb",
+        fontFamily: "Georgia, serif",
       }}
     >
-      <div style={{ maxWidth: "600px", width: "100%", textAlign: "center" }}>
-        <h1 style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>
+      <div
+        style={{
+          maxWidth: "720px",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "3.2rem",
+            fontWeight: 500,
+            marginBottom: "0.6rem",
+            letterSpacing: "-0.03em",
+          }}
+        >
           One-Line Advice
         </h1>
 
-        <p style={{ opacity: 0.7, marginBottom: "1.5rem" }}>
-          Advice of the day
+        <p
+          style={{
+            opacity: 0.5,
+            marginBottom: "4rem",
+            fontSize: "0.95rem",
+          }}
+        >
+          Something different. Every time.
         </p>
 
         <div
           style={{
-            fontSize: "1.8rem",
-            lineHeight: "1.4",
-            marginBottom: "1rem",
-            padding: "1.5rem",
-            background: "#181818",
-            borderRadius: "10px",
+            fontSize: "2.2rem",
+            lineHeight: "1.55",
+            padding: "2.5rem",
+            marginBottom: "4rem",
+            borderRadius: "18px",
+            background: "rgba(255,255,255,0.05)",
+            backdropFilter: "blur(14px)",
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(10px)",
+            transition: "all 0.8s ease",
           }}
         >
-          “{currentAdvice}”
-        </div>
-
-        <div style={{ marginBottom: "2rem" }}>
-          <button
-            onClick={copyAdvice}
-            style={{
-              marginRight: "0.5rem",
-              background: "transparent",
-              border: "1px solid #444",
-              color: "#fff",
-              padding: "0.4rem 0.9rem",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-            }}
-          >
-            {copied ? "Copied!" : "Copy"}
-          </button>
-
-          <button
-            onClick={shareWhatsApp}
-            style={{
-              marginRight: "0.5rem",
-              background: "#25D366",
-              border: "none",
-              color: "#000",
-              padding: "0.4rem 0.9rem",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              fontWeight: "bold",
-            }}
-          >
-            WhatsApp
-          </button>
-
-          <button
-            onClick={shareX}
-            style={{
-              background: "#ffffff",
-              border: "none",
-              color: "#000",
-              padding: "0.4rem 0.9rem",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              fontWeight: "bold",
-            }}
-          >
-            X
-          </button>
+          {advice && `“${advice}”`}
         </div>
 
         <button
-          onClick={getRandomAdvice}
+          onClick={fetchAdvice}
+          disabled={loading}
           style={{
-            display: "block",
-            margin: "0 auto 2.5rem",
-            padding: "0.8rem 1.6rem",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            borderRadius: "8px",
-            border: "none",
+            padding: "0.9rem 2.2rem",
+            fontSize: "0.95rem",
+            borderRadius: "999px",
+            border: "1px solid rgba(255,255,255,0.3)",
+            background: "transparent",
+            color: "#f9fafb",
             cursor: "pointer",
-            background: "#ffffff",
-            color: "#000",
+            opacity: loading ? 0.5 : 0.85,
+            transition: "all 0.3s ease",
           }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.opacity = "1")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.opacity = "0.85")
+          }
         >
-          Show random advice
+          {loading ? "Thinking…" : "Give me something new"}
         </button>
 
-        <div>
-          <textarea
-            placeholder="Write your one-line advice (max 80 characters)"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            maxLength={80}
-            style={{
-              width: "100%",
-              height: "90px",
-              padding: "0.8rem",
-              borderRadius: "6px",
-              border: "none",
-              fontSize: "0.95rem",
-              marginBottom: "0.4rem",
-            }}
-          />
-
-          <div
-            style={{
-              fontSize: "0.75rem",
-              opacity: 0.6,
-              textAlign: "right",
-              marginBottom: "0.8rem",
-            }}
-          >
-            {input.length}/80
-          </div>
-
-          <button
-            onClick={submitAdvice}
-            style={{
-              padding: "0.6rem 1.4rem",
-              fontWeight: "bold",
-              borderRadius: "6px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Submit advice
-          </button>
-        </div>
+        <p
+          style={{
+            marginTop: "3rem",
+            fontSize: "0.7rem",
+            opacity: 0.35,
+          }}
+        >
+          Refreshing too fast ruins it.
+        </p>
       </div>
+
+      {/* CSS animations */}
+      <style>{`
+        @keyframes bgMove {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </main>
   );
 }
