@@ -18,11 +18,25 @@ export default function Home() {
   const [ritual, setRitual] = useState<Ritual>("morning");
   const [tone, setTone] = useState<Tone>("calm");
 
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  // Load ritual + favorites on first load
   useEffect(() => {
     const detectedRitual = getDefaultRitual();
     setRitual(detectedRitual);
     setTone(detectedRitual === "morning" ? "calm" : "philosophical");
+
+    const stored = localStorage.getItem("favorites");
+    if (stored) {
+      setFavorites(JSON.parse(stored));
+    }
   }, []);
+
+  // Persist favorites
+  useEffect(() => {
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+  }, [favorites]);
 
   async function fetchAdvice(selectedTone = tone) {
     setLoading(true);
@@ -50,6 +64,16 @@ export default function Home() {
     fetchAdvice();
   }, [tone]);
 
+  function saveFavorite() {
+    if (!favorites.includes(advice)) {
+      setFavorites([advice, ...favorites]);
+    }
+  }
+
+  function removeFavorite(text: string) {
+    setFavorites(favorites.filter((f) => f !== text));
+  }
+
   const isNight = ritual === "night";
 
   return (
@@ -57,7 +81,7 @@ export default function Home() {
       style={{
         minHeight: "100vh",
         background: isNight
-          ? "linear-gradient(120deg, #020617, #020617, #000)"
+          ? "linear-gradient(120deg, #020617, #000)"
           : "linear-gradient(120deg, #0f172a, #020617)",
         backgroundSize: "400% 400%",
         animation: "bgMove 20s ease infinite",
@@ -70,13 +94,7 @@ export default function Home() {
       }}
     >
       <div style={{ maxWidth: "720px", textAlign: "center" }}>
-        <h1
-          style={{
-            fontSize: "3.2rem",
-            fontWeight: 500,
-            marginBottom: "0.6rem",
-          }}
-        >
+        <h1 style={{ fontSize: "3.2rem", marginBottom: "0.4rem" }}>
           One-Line Advice
         </h1>
 
@@ -86,8 +104,8 @@ export default function Home() {
             : "Something to sit with before you rest."}
         </p>
 
-        {/* Ritual Selector */}
-        <div style={{ marginBottom: "2rem" }}>
+        {/* Ritual Switch */}
+        <div style={{ marginBottom: "1.8rem" }}>
           <button
             onClick={() => {
               setRitual("morning");
@@ -137,7 +155,7 @@ export default function Home() {
           value={tone}
           onChange={(e) => setTone(e.target.value as Tone)}
           style={{
-            marginBottom: "3rem",
+            marginBottom: "2.5rem",
             padding: "0.4rem 0.8rem",
             borderRadius: "999px",
             background: "rgba(255,255,255,0.08)",
@@ -151,12 +169,13 @@ export default function Home() {
           <option value="philosophical">Philosophical</option>
         </select>
 
+        {/* Advice */}
         <div
           style={{
             fontSize: "2.2rem",
             lineHeight: "1.55",
             padding: "2.5rem",
-            marginBottom: "4rem",
+            marginBottom: "2rem",
             borderRadius: "18px",
             background: "rgba(255,255,255,0.05)",
             backdropFilter: "blur(14px)",
@@ -168,22 +187,93 @@ export default function Home() {
           {advice && `“${advice}”`}
         </div>
 
+        {/* Action Buttons */}
+        <div style={{ marginBottom: "3rem" }}>
+          <button
+            onClick={() => fetchAdvice()}
+            disabled={loading}
+            style={{
+              marginRight: "0.6rem",
+              padding: "0.7rem 1.6rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background: "transparent",
+              color: "#fff",
+              cursor: "pointer",
+              opacity: loading ? 0.5 : 0.85,
+            }}
+          >
+            {loading ? "Thinking…" : "New"}
+          </button>
+
+          <button
+            onClick={saveFavorite}
+            style={{
+              padding: "0.7rem 1.4rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background: "rgba(255,255,255,0.1)",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Save
+          </button>
+        </div>
+
+        {/* Favorites */}
         <button
-          onClick={() => fetchAdvice()}
-          disabled={loading}
+          onClick={() => setShowFavorites(!showFavorites)}
           style={{
-            padding: "0.9rem 2.2rem",
-            fontSize: "0.95rem",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.3)",
-            background: "transparent",
-            color: "#f9fafb",
+            fontSize: "0.75rem",
+            opacity: 0.5,
+            background: "none",
+            border: "none",
+            color: "#fff",
             cursor: "pointer",
-            opacity: loading ? 0.5 : 0.85,
+            marginBottom: "1rem",
           }}
         >
-          {loading ? "Thinking…" : "Give me something new"}
+          {showFavorites ? "Hide saved thoughts" : "View saved thoughts"}
         </button>
+
+        {showFavorites && (
+          <div
+            style={{
+              marginTop: "1rem",
+              padding: "1.5rem",
+              borderRadius: "14px",
+              background: "rgba(255,255,255,0.04)",
+              textAlign: "left",
+              maxHeight: "220px",
+              overflowY: "auto",
+              fontSize: "0.9rem",
+            }}
+          >
+            {favorites.length === 0 && (
+              <p style={{ opacity: 0.5 }}>No saved thoughts yet.</p>
+            )}
+
+            {favorites.map((f, i) => (
+              <div key={i} style={{ marginBottom: "1rem" }}>
+                “{f}”
+                <button
+                  onClick={() => removeFavorite(f)}
+                  style={{
+                    marginLeft: "0.5rem",
+                    fontSize: "0.7rem",
+                    background: "none",
+                    border: "none",
+                    color: "#aaa",
+                    cursor: "pointer",
+                  }}
+                >
+                  remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <style>{`
           @keyframes bgMove {
