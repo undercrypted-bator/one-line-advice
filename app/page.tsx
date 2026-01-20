@@ -21,17 +21,16 @@ export default function Home() {
   const [soundOn, setSoundOn] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Init ritual + sound preference
   useEffect(() => {
-    const detectedRitual = getDefaultRitual();
-    setRitual(detectedRitual);
-    setTone(detectedRitual === "morning" ? "calm" : "philosophical");
+    const detected = getDefaultRitual();
+    setRitual(detected);
+    setTone(detected === "morning" ? "calm" : "philosophical");
 
-    const storedSound = localStorage.getItem("ambientSound");
-    if (storedSound === "on") setSoundOn(true);
+    if (localStorage.getItem("ambientSound") === "on") {
+      setSoundOn(true);
+    }
   }, []);
 
-  // Handle sound play/pause
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -78,10 +77,11 @@ export default function Home() {
     <main
       style={{
         minHeight: "100vh",
-        background: isNight
-          ? "linear-gradient(120deg, #020617, #000)"
+        backgroundImage: isNight
+          ? "linear-gradient(120deg, #020617, #000000)"
           : "linear-gradient(120deg, #0f172a, #020617)",
         backgroundSize: "400% 400%",
+        backgroundPosition: "0% 50%",
         animation: "bgMove 20s ease infinite",
         display: "flex",
         alignItems: "center",
@@ -91,7 +91,6 @@ export default function Home() {
         fontFamily: "Georgia, serif",
       }}
     >
-      {/* Hidden audio */}
       <audio ref={audioRef} src="/ambient.mp3" />
 
       <div style={{ maxWidth: "720px", textAlign: "center" }}>
@@ -105,7 +104,6 @@ export default function Home() {
             : "Something to sit with before you rest."}
         </p>
 
-        {/* Sound Toggle */}
         <button
           onClick={() => setSoundOn(!soundOn)}
           style={{
