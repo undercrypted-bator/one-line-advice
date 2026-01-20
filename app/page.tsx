@@ -18,19 +18,32 @@ export default function Home() {
   const [ritual, setRitual] = useState<Ritual>("morning");
   const [tone, setTone] = useState<Tone>("calm");
 
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
+
   const [soundOn, setSoundOn] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Initial setup
   useEffect(() => {
     const detected = getDefaultRitual();
     setRitual(detected);
     setTone(detected === "morning" ? "calm" : "philosophical");
+
+    const fav = localStorage.getItem("favorites");
+    if (fav) setFavorites(JSON.parse(fav));
 
     if (localStorage.getItem("ambientSound") === "on") {
       setSoundOn(true);
     }
   }, []);
 
+  // Persist favorites
+  useEffect(() => {
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+  }, [favorites]);
+
+  // Handle ambient sound
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -71,6 +84,16 @@ export default function Home() {
     fetchAdvice();
   }, [tone]);
 
+  function saveFavorite() {
+    if (advice && !favorites.includes(advice)) {
+      setFavorites([advice, ...favorites]);
+    }
+  }
+
+  function removeFavorite(text: string) {
+    setFavorites(favorites.filter((f) => f !== text));
+  }
+
   const isNight = ritual === "night";
 
   return (
@@ -104,27 +127,95 @@ export default function Home() {
             : "Something to sit with before you rest."}
         </p>
 
-        <button
-          onClick={() => setSoundOn(!soundOn)}
+        {/* Ritual */}
+        <div style={{ marginBottom: "1rem" }}>
+          <button
+            onClick={() => {
+              setRitual("morning");
+              setTone("calm");
+            }}
+            style={{
+              marginRight: "0.5rem",
+              padding: "0.3rem 0.9rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background:
+                ritual === "morning"
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: "0.7rem",
+            }}
+          >
+            Morning
+          </button>
+
+          <button
+            onClick={() => {
+              setRitual("night");
+              setTone("philosophical");
+            }}
+            style={{
+              padding: "0.3rem 0.9rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background:
+                ritual === "night"
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: "0.7rem",
+            }}
+          >
+            Night
+          </button>
+        </div>
+
+        {/* Tone */}
+        <select
+          value={tone}
+          onChange={(e) => setTone(e.target.value as Tone)}
           style={{
-            fontSize: "0.7rem",
-            opacity: 0.5,
-            background: "none",
-            border: "none",
+            marginBottom: "2rem",
+            padding: "0.4rem 0.8rem",
+            borderRadius: "999px",
+            background: "rgba(255,255,255,0.08)",
             color: "#fff",
+            border: "1px solid rgba(255,255,255,0.3)",
             cursor: "pointer",
-            marginBottom: "1.5rem",
           }}
         >
-          {soundOn ? "Ambient sound: on" : "Ambient sound: off"}
-        </button>
+          <option value="calm">Calm</option>
+          <option value="harsh">Harsh</option>
+          <option value="philosophical">Philosophical</option>
+        </select>
 
+        {/* Ambient */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <button
+            onClick={() => setSoundOn(!soundOn)}
+            style={{
+              fontSize: "0.7rem",
+              opacity: 0.5,
+              background: "none",
+              border: "none",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            {soundOn ? "Ambient sound: on" : "Ambient sound: off"}
+          </button>
+        </div>
+
+        {/* Advice */}
         <div
           style={{
             fontSize: "2.2rem",
             lineHeight: "1.55",
             padding: "2.5rem",
-            marginBottom: "3rem",
+            marginBottom: "2rem",
             borderRadius: "18px",
             background: "rgba(255,255,255,0.05)",
             backdropFilter: "blur(14px)",
@@ -136,22 +227,92 @@ export default function Home() {
           {advice && `“${advice}”`}
         </div>
 
+        {/* Actions */}
+        <div style={{ marginBottom: "2.5rem" }}>
+          <button
+            onClick={() => fetchAdvice()}
+            disabled={loading}
+            style={{
+              marginRight: "0.6rem",
+              padding: "0.7rem 1.6rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background: "transparent",
+              color: "#fff",
+              cursor: "pointer",
+              opacity: loading ? 0.5 : 0.85,
+            }}
+          >
+            {loading ? "Thinking…" : "New"}
+          </button>
+
+          <button
+            onClick={saveFavorite}
+            style={{
+              padding: "0.7rem 1.4rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              background: "rgba(255,255,255,0.1)",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Save
+          </button>
+        </div>
+
+        {/* Favorites */}
         <button
-          onClick={() => fetchAdvice()}
-          disabled={loading}
+          onClick={() => setShowFavorites(!showFavorites)}
           style={{
-            padding: "0.9rem 2.2rem",
-            fontSize: "0.95rem",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.3)",
-            background: "transparent",
-            color: "#f9fafb",
+            fontSize: "0.75rem",
+            opacity: 0.5,
+            background: "none",
+            border: "none",
+            color: "#fff",
             cursor: "pointer",
-            opacity: loading ? 0.5 : 0.85,
           }}
         >
-          {loading ? "Thinking…" : "Give me something new"}
+          {showFavorites ? "Hide saved thoughts" : "View saved thoughts"}
         </button>
+
+        {showFavorites && (
+          <div
+            style={{
+              marginTop: "1rem",
+              padding: "1.5rem",
+              borderRadius: "14px",
+              background: "rgba(255,255,255,0.04)",
+              textAlign: "left",
+              maxHeight: "220px",
+              overflowY: "auto",
+              fontSize: "0.9rem",
+            }}
+          >
+            {favorites.length === 0 && (
+              <p style={{ opacity: 0.5 }}>No saved thoughts yet.</p>
+            )}
+
+            {favorites.map((f, i) => (
+              <div key={i} style={{ marginBottom: "1rem" }}>
+                “{f}”
+                <button
+                  onClick={() => removeFavorite(f)}
+                  style={{
+                    marginLeft: "0.5rem",
+                    fontSize: "0.7rem",
+                    background: "none",
+                    border: "none",
+                    color: "#aaa",
+                    cursor: "pointer",
+                  }}
+                >
+                  remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <style>{`
           @keyframes bgMove {
